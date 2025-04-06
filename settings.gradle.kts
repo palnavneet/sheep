@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Sheep"
 include(":app")
+include(":sheep")

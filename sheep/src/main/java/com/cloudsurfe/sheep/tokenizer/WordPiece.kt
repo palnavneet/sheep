@@ -13,10 +13,10 @@ class WordPiece(
 
     private val idToToken: MutableMap<Int, String> = HashMap()
     private val tokenToId: MutableMap<String, Int> = HashMap()
-    private val isVocabLoaded = false
+    private var isVocabLoaded = false
 
     override fun loadVocab() {
-        if (isVocabLoaded) {
+        if (!isVocabLoaded) {
             try {
                 context.assets.open(assetFileName).use { inputStream ->
                     BufferedReader(InputStreamReader(inputStream)).use { reader ->
@@ -26,6 +26,7 @@ class WordPiece(
                         }
                     }
                 }
+                isVocabLoaded = true
             } catch (e: Exception) {
                 Log.d(TAG, "Failed to read $assetFileName : ${e.message}")
             }

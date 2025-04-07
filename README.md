@@ -11,6 +11,8 @@
   It comes with built-in tokenizers (like WordPiece) and also supports custom pipelines and tokenizers out of the box.
 </p>
 
+<br>
+
 ---
 
 | 🧠 Model       | ⚙️ Type         | 🧩 Pipelines Supported         | 🔤 Tokenizer Support         | 📊 Status       |
@@ -21,6 +23,8 @@
 | [GPT-2 (Planned)](https://huggingface.co/gpt2) | Decoder           | TextGeneration, Summarizer    | BPE                          | 🧪 In Design     |
 
 ---
+
+<br>
 
 ## ⚙️ Basic Usage
 
@@ -37,9 +41,9 @@ sheep.run(
 )
 ```
 
-### 🚧 3. **Roadmap**
+<br>
 
-Keep it lean, just show what’s coming:
+### 🚧 3. **Roadmap**
 
 ```md
 ## 🚧 Roadmap
@@ -52,6 +56,8 @@ Keep it lean, just show what’s coming:
 - [ ] SentencePiece / BPE tokenizer
 - [ ] Upload to Maven Central
 ```
+
+<br>
 
 ## 📄 License
 

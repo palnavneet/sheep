@@ -22,6 +22,21 @@
 
 ---
 
+## ⚙️ Basic Usage
+
+```kotlin
+val sheep = Sheep(
+    context = context,
+    pipeline = PipelineType.TextSimilarity("Hello", "World"),
+    tokenizer = TokenizerType.WordPiece
+)
+
+sheep.run(
+    assetModelFileName = "distilbert.onnx",
+    assetVocabFileName = "vocab.txt"
+)
+```
+
 ### 🚧 3. **Roadmap**
 
 Keep it lean, just show what’s coming:
@@ -36,6 +51,7 @@ Keep it lean, just show what’s coming:
 - [ ] Add GPT-style decoder model support
 - [ ] SentencePiece / BPE tokenizer
 - [ ] Upload to Maven Central
+```
 
 ## 📄 License
 

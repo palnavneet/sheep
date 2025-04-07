@@ -37,3 +37,8 @@ Keep it lean, just show what’s coming:
 - [ ] SentencePiece / BPE tokenizer
 - [ ] Upload to Maven Central
 
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+

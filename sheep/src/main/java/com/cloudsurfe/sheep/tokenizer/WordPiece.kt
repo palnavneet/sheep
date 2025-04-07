@@ -8,7 +8,7 @@ import java.io.InputStreamReader
 
 class WordPiece(
     private val context: Context,
-    private val assetFileName: String
+    private val assetVocabFileName: String
 ) : Tokenizer {
 
     private val idToToken: MutableMap<Int, String> = HashMap()
@@ -18,7 +18,7 @@ class WordPiece(
     override fun loadVocab() {
         if (!isVocabLoaded) {
             try {
-                context.assets.open(assetFileName).use { inputStream ->
+                context.assets.open(assetVocabFileName).use { inputStream ->
                     BufferedReader(InputStreamReader(inputStream)).use { reader ->
                         reader.lineSequence().forEachIndexed { index, line ->
                             idToToken[index] = line
@@ -28,7 +28,7 @@ class WordPiece(
                 }
                 isVocabLoaded = true
             } catch (e: Exception) {
-                Log.d(TAG, "Failed to read $assetFileName : ${e.message}")
+                Log.d(TAG, "Failed to read $assetVocabFileName : ${e.message}")
             }
         }
     }

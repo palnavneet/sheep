@@ -10,10 +10,9 @@
 
 ## 🧠 Supported Models & Pipelines
 
-| Model        | Type         | Pipelines Supported       | Tokenizer Support     | Status     |
-|--------------|--------------|---------------------------|------------------------|------------|
-| DistilBERT   | Transformer  | TextSimilarity, Custom    | WordPiece, Custom      | ✅ Working |
-| (Coming Soon)| Classifier   | TextClassification        | WordPiece, SentencePiece| 🚧 Planned |
-| (Coming Soon)| QA Model     | QuestionAnswering         | WordPiece              | 🚧 Planned |
-| (Planned)    | GPT / Decoder| TextGeneration, Summarizer| BPE   
-
+| 🧠 Model       | ⚙️ Type         | 🧩 Pipelines Supported         | 🔤 Tokenizer Support         | 📊 Status       |
+|---------------|------------------|-------------------------------|------------------------------|-----------------|
+| [DistilBERT](https://huggingface.co/distilbert/distilbert-base-uncased) | Transformer       | TextSimilarity, Custom        | WordPiece, Custom            | ✅ Working       |
+| [BERT (Planned)](https://huggingface.co/bert-base-uncased) | Classifier        | TextClassification            | WordPiece, SentencePiece     | 🚧 Planned       |
+| [RoBERTa (Planned)](https://huggingface.co/roberta-base) | QA Model          | QuestionAnswering             | WordPiece                    | 🚧 Planned       |
+| [GPT-2 (Planned)](https://huggingface.co/gpt2) | Decoder           | TextGeneration, Summarizer    | BPE                          | 🧪 In Design     |

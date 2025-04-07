@@ -20,3 +20,20 @@
 | [RoBERTa (Planned)](https://huggingface.co/roberta-base) | QA Model          | QuestionAnswering             | WordPiece                    | 🚧 Planned       |
 | [GPT-2 (Planned)](https://huggingface.co/gpt2) | Decoder           | TextGeneration, Summarizer    | BPE                          | 🧪 In Design     |
 
+---
+
+### 🚧 3. **Roadmap**
+
+Keep it lean, just show what’s coming:
+
+```md
+## 🚧 Roadmap
+
+- [x] DistilBERT support
+- [x] Text similarity pipeline
+- [x] WordPiece tokenizer
+- [ ] Add text classification pipeline
+- [ ] Add GPT-style decoder model support
+- [ ] SentencePiece / BPE tokenizer
+- [ ] Upload to Maven Central
+

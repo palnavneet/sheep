@@ -3,6 +3,10 @@
 <h3 align="center" style="color:red;">🚧 Under Development</h3>
 
 <p align="center">
+  <img src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" width="250"/>
+</p>
+
+<p align="center">
   Sheep lets you run popular NLP models like DistilBERT directly on Android using ONNX Runtime.  
   It comes with built-in tokenizers (like WordPiece) and also supports custom pipelines and tokenizers out of the box.
 </p>

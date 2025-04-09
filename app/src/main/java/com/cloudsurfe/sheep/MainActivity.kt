@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import com.cloudsurfe.sheep.core.Sheep
 import com.cloudsurfe.sheep.pipeline.PipelineType
+import com.cloudsurfe.sheep.pipeline.TextSimilarity
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
 import com.cloudsurfe.sheep.tokenizer.TokenizerType
 import com.cloudsurfe.sheep.tokenizer.WordPiece
@@ -13,7 +14,11 @@ import com.cloudsurfe.sheep.tokenizer.WordPiece
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Sheep(this, PipelineType.TextSimilarity("hey there ", "How are you"), TokenizerType.WordPiece).run("distilbert_model_quantized.onnx","vocab.txt")
+       val sheep =  Sheep(this, TextSimilarity(), TokenizerType.WordPiece,"distilbert_model_quantized.onnx","vocab.txt")
+        sheep.run(
+            PipelineType.TextSimilarity("Hey","World")
+        )
+
     }
 }
 

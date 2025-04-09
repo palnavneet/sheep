@@ -18,73 +18,103 @@ import java.nio.LongBuffer
 
 class Sheep(
     private val context: Context,
-    private val pipeline: PipelineType,
-    private val tokenizer: TokenizerType
+    private val pipeline: Pipeline,
+    private val tokenizer: TokenizerType,
+    private val assetModelFilename: String,
+    private val assetModelVocabFile: String
 ) {
 
     private lateinit var env: OrtEnvironment
     private lateinit var session: OrtSession
+    private lateinit var name: String
 
-    fun run(assetModelFileName: String, assetVocabFileName: String) {
+    init {
         try {
             env = OrtEnvironment.getEnvironment()
             Log.d(TAG, "Initializing ONNX model...")
-            val modelPath: String? = copyAssetInInternalStorage(context, assetModelFileName)
+            val modelPath: String? = copyAssetInInternalStorage(context, assetModelFilename)
             session = env.createSession(modelPath)
-            val resolvedPipeline = when (pipeline) {
-                is PipelineType.CustomPipeline -> pipeline.pipeline
-                is PipelineType.TextSimilarity -> TextSimilarity()
-            }
-            val resolvedTokenizer = when (tokenizer) {
-                is TokenizerType.CustomTokenizer -> tokenizer.tokenizer
-                TokenizerType.WordPiece -> WordPiece(context, assetModelFileName)
-            }
-
-            val adjustablePipeline = when(pipeline){
-                is PipelineType.CustomPipeline -> TODO()
-                is PipelineType.TextSimilarity -> {
-                    runModelInference(
-                        resolvedTokenizer,
-                        pipeline.input1,
-                        pipeline.input2
-                    ).forEach { outputTensor ->
-                        val float3DArray = outputTensor.value as Array<Array<FloatArray>>
-                        Log.d("Sheep", "$float3DArray")
-                        Log.d("Sheep", "Batch size: ${float3DArray.size}")
-                        Log.d("Sheep", "Sequence length: ${float3DArray[0].size}")
-                        Log.d("Sheep", "Hidden size: ${float3DArray[0][0].size}")
-                    }
-                }
-            }
-
         } catch (e: OrtException) {
             Log.d(TAG, "Error Initializing ONNX model: ${e.message}")
         }
+
     }
 
-    private fun runModelInference(
+    fun run(pipelineType: PipelineType): Map<Int, String> {
+
+        if (!::session.isInitialized) {
+            Log.d(TAG, "Onnx session is not initialized")
+            return emptyMap()
+        }
+        // How can I check if session is initialised here
+        Log.d(TAG, "Inside run")
+        val resolvedPipeline = when (pipelineType) {
+            is PipelineType.CustomPipeline -> pipeline
+            is PipelineType.TextSimilarity -> TextSimilarity()
+        }
+        val resolvedTokenizer = when (tokenizer) {
+            is TokenizerType.CustomTokenizer -> tokenizer.tokenizer
+            TokenizerType.WordPiece -> WordPiece(context, assetModelVocabFile)
+        }
+
+        when (pipelineType) {
+            is PipelineType.CustomPipeline -> {
+                return resolvedPipeline.pipeline(
+                    getOutputTensor(
+                        resolvedTokenizer,
+                        *pipelineType.inputs
+                    )
+                )
+            }
+
+            is PipelineType.TextSimilarity -> {
+                getOutputTensor(
+                    resolvedTokenizer,
+                    pipelineType.input1,
+                    pipelineType.input2
+                ).forEach { outputTensor ->
+                    val float3DArray = outputTensor
+                    Log.d("Sheep", "$float3DArray")
+                    Log.d("Sheep", "Batch size: ${float3DArray.size}")
+                    Log.d("Sheep", "Sequence length: ${float3DArray[0].size}")
+                    Log.d("Sheep", "Hidden size: ${float3DArray[0][0].size}")
+                }
+                return resolvedPipeline.pipeline(
+                    getOutputTensor(
+                        resolvedTokenizer,
+                        pipelineType.input1,
+                        pipelineType.input2
+                    )
+                )
+            }
+        }
+
+    }
+
+    private fun getOutputTensor(
         tokenizer: Tokenizer,
         vararg inputText: String
-    ): List<OnnxTensor> {
-        val outputs = mutableListOf<OnnxTensor>()
-        val inputTensor = inputTensor(
+    ): List<Array<Array<FloatArray>>> {
+        val outputs = mutableListOf<Array<Array< FloatArray>>>()
+        getInputTensor(
             tokenizer,
             *inputText
-        ).forEach {(index , inputTensor) ->
-            val inputMap : Map<String, OnnxTensor> = mapOf("input_ids" to inputTensor)
+        ).forEach { (index, inputTensor) ->
+            val inputMap: Map<String, OnnxTensor> = mapOf("input_ids" to inputTensor)
             val result = session.run(inputMap)
             val optionalOutput = result.get("last_hidden_state")
-            if (optionalOutput.isPresent){
+            if (optionalOutput.isPresent) {
                 val outputTensor = optionalOutput.get() as OnnxTensor
-                outputs.add(outputTensor)
-            }else{
+                val float3dArray = outputTensor.value as Array<Array<FloatArray>>
+                outputs.add(float3dArray)
+            } else {
                 Log.d(TAG, "Warning: No valid output for index $index")
             }
         }
         return outputs
     }
 
-    private fun inputTensor(
+    private fun getInputTensor(
         tokenizer: Tokenizer,
         vararg inputText: String
     ): Map<Int, OnnxTensor> {
@@ -115,10 +145,13 @@ class Sheep(
         const val TAG: String = "Sheep"
     }
 
-    class Builder() {
+    class Builder(
+        private val assetModelFileName: String,
+        private val assetModelVocabFile: String
+    ) {
 
         private lateinit var context: Context
-        private lateinit var pipeline: PipelineType
+        private lateinit var pipeline: Pipeline
         private lateinit var tokenizer: TokenizerType
 
         fun addTokenizer(tokenizer: Tokenizer) = apply {
@@ -126,13 +159,15 @@ class Sheep(
         }
 
         fun addPipeline(pipeline: Pipeline) = apply {
-            this.pipeline = PipelineType.CustomPipeline(pipeline)
+            this.pipeline = pipeline
         }
 
         fun build() = Sheep(
             context,
             pipeline,
-            tokenizer
+            tokenizer,
+            assetModelFileName,
+            assetModelVocabFile
         )
     }
 

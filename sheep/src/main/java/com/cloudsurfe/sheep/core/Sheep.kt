@@ -8,7 +8,7 @@ import android.content.Context
 import android.util.Log
 import com.cloudsurfe.sheep.pipeline.Pipeline
 import com.cloudsurfe.sheep.pipeline.PipelineType
-import com.cloudsurfe.sheep.pipeline.TextSimilarity
+import com.cloudsurfe.sheep.pipeline.TextClassification
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
 import com.cloudsurfe.sheep.tokenizer.TokenizerType
 import com.cloudsurfe.sheep.tokenizer.WordPiece
@@ -50,7 +50,7 @@ class Sheep(
         Log.d(TAG, "Inside run")
         val resolvedPipeline = when (pipelineType) {
             is PipelineType.CustomPipeline -> pipeline
-            is PipelineType.TextSimilarity -> TextSimilarity()
+            is PipelineType.TextSimilarity -> TextClassification()
         }
         val resolvedTokenizer = when (tokenizer) {
             is TokenizerType.CustomTokenizer -> tokenizer.tokenizer
@@ -71,9 +71,8 @@ class Sheep(
                 getOutputTensor(
                     resolvedTokenizer,
                     pipelineType.input1,
-                    pipelineType.input2
                 ).forEach { outputTensor ->
-                    val float3DArray = outputTensor
+                    val float3DArray = outputTensor.value as Array<Array<FloatArray>>
                     Log.d("Sheep", "$float3DArray")
                     Log.d("Sheep", "Batch size: ${float3DArray.size}")
                     Log.d("Sheep", "Sequence length: ${float3DArray[0].size}")
@@ -83,7 +82,6 @@ class Sheep(
                     getOutputTensor(
                         resolvedTokenizer,
                         pipelineType.input1,
-                        pipelineType.input2
                     )
                 )
             }
@@ -94,8 +92,8 @@ class Sheep(
     private fun getOutputTensor(
         tokenizer: Tokenizer,
         vararg inputText: String
-    ): List<Array<Array<FloatArray>>> {
-        val outputs = mutableListOf<Array<Array< FloatArray>>>()
+    ): List<OnnxTensor> {
+        val outputs = mutableListOf<OnnxTensor>()
         getInputTensor(
             tokenizer,
             *inputText
@@ -105,8 +103,7 @@ class Sheep(
             val optionalOutput = result.get("last_hidden_state")
             if (optionalOutput.isPresent) {
                 val outputTensor = optionalOutput.get() as OnnxTensor
-                val float3dArray = outputTensor.value as Array<Array<FloatArray>>
-                outputs.add(float3dArray)
+                outputs.add(outputTensor)
             } else {
                 Log.d(TAG, "Warning: No valid output for index $index")
             }

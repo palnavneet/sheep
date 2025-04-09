@@ -5,6 +5,6 @@ import ai.onnxruntime.OnnxTensor
 interface Pipeline{
     val numberOfInputs : Int
 
-    fun pipeline(onnxTensors : List<Array<Array<FloatArray>>>) : Map<Int, String>
+    fun pipeline(onnxTensors : List<OnnxTensor>) : Map<Int, String>
 
 }

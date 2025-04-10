@@ -59,7 +59,9 @@ class Sheep(
         when (pipelineType) {
             is PipelineType.CustomPipeline -> {
                 return resolvedPipeline.pipeline(
-                    getOutputTensor(
+                    resolvedPipeline.getOutputTensor(
+                        session,
+                        env,
                         resolvedTokenizer,
                         *pipelineType.inputs
                     )
@@ -67,7 +69,9 @@ class Sheep(
             }
 
             is PipelineType.TextSimilarity -> {
-                getOutputTensor(
+                resolvedPipeline.getOutputTensor(
+                    session,
+                    env,
                     resolvedTokenizer,
                     pipelineType.input1,
                 ).forEach { outputTensor ->
@@ -78,7 +82,9 @@ class Sheep(
                     Log.d("Sheep", "Hidden size: ${float3DArray[0][0].size}")
                 }
                 return resolvedPipeline.pipeline(
-                    getOutputTensor(
+                    resolvedPipeline.getOutputTensor(
+                        session,
+                        env,
                         resolvedTokenizer,
                         pipelineType.input1,
                     )
@@ -86,55 +92,6 @@ class Sheep(
             }
         }
 
-    }
-
-    private fun getOutputTensor(
-        tokenizer: Tokenizer,
-        vararg inputText: String
-    ): List<OnnxTensor> {
-        val outputs = mutableListOf<OnnxTensor>()
-        getInputTensor(
-            tokenizer,
-            *inputText
-        ).forEach { (index, inputTensor) ->
-            val inputMap: Map<String, OnnxTensor> = mapOf("input_ids" to inputTensor)
-            val result = session.run(inputMap,)
-            val optionalOutput = result.get("last_hidden_state")
-            if (optionalOutput.isPresent) {
-                val outputTensor = optionalOutput.get() as OnnxTensor
-                outputs.add(outputTensor)
-            } else {
-                Log.d(TAG, "Warning: No valid output for index $index")
-            }
-        }
-        return outputs
-    }
-
-    private fun getInputTensor(
-        tokenizer: Tokenizer,
-        vararg inputText: String
-    ): Map<Int, OnnxTensor> {
-        return tokenizer(
-            tokenizer,
-            *inputText
-        ).withIndex().associate { (index, tokenizedInput) ->
-            index to shape(tokenizedInput)
-        }
-    }
-
-    private fun tokenizer(
-        tokenizer: Tokenizer,
-        vararg inputText: String,
-    ): List<LongArray> {
-        tokenizer.apply {
-            loadVocab()
-        }
-        return inputText.map { text -> tokenizer.tokenize(text) }
-    }
-
-    private fun shape(inputId: LongArray): OnnxTensor {
-        val shape: LongArray = longArrayOf(1, inputId.size.toLong())
-        return OnnxTensor.createTensor(env, LongBuffer.wrap(inputId), shape)
     }
 
     companion object {

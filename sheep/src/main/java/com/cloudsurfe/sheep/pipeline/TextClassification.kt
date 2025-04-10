@@ -1,7 +1,12 @@
 package com.cloudsurfe.sheep.pipeline
 
 import ai.onnxruntime.OnnxTensor
+import ai.onnxruntime.OrtEnvironment
+import ai.onnxruntime.OrtSession
 import android.util.Log
+import com.cloudsurfe.sheep.core.Sheep.Companion.TAG
+import com.cloudsurfe.sheep.tokenizer.Tokenizer
+import java.nio.LongBuffer
 import kotlin.math.exp
 
 class TextClassification(
@@ -19,6 +24,59 @@ class TextClassification(
             Log.d("Sheep", "$score")
             position to label
         }
+    }
+
+    override fun getOutputTensor(
+        session : OrtSession,
+        env : OrtEnvironment,
+        tokenizer: Tokenizer,
+        vararg inputText: String
+    ): List<OnnxTensor> {
+        val outputs = mutableListOf<OnnxTensor>()
+        getInputTensor(
+            env,
+            tokenizer,
+            *inputText
+        ).forEach { (index, inputTensor) ->
+            val inputMap: Map<String, OnnxTensor> = mapOf("input_ids" to inputTensor)
+            val result = session.run(inputMap,)
+            val optionalOutput = result.get("last_hidden_state")
+            if (optionalOutput.isPresent) {
+                val outputTensor = optionalOutput.get() as OnnxTensor
+                outputs.add(outputTensor)
+            } else {
+                Log.d(TAG, "Warning: No valid output for index $index")
+            }
+        }
+        return outputs
+    }
+
+    override fun getInputTensor(
+        env : OrtEnvironment,
+        tokenizer: Tokenizer,
+        vararg inputText: String
+    ): Map<Int, OnnxTensor> {
+        return tokenizer(
+            tokenizer,
+            *inputText
+        ).withIndex().associate { (index, tokenizedInput) ->
+            index to shape(env,tokenizedInput)
+        }
+    }
+
+    override fun tokenizer(
+        tokenizer: Tokenizer,
+        vararg inputText: String
+    ): List<LongArray> {
+        tokenizer.apply {
+            loadVocab()
+        }
+        return inputText.map { text -> tokenizer.tokenize(text) }
+    }
+
+    override fun shape(env: OrtEnvironment, inputId: LongArray): OnnxTensor {
+        val shape: LongArray = longArrayOf(1, inputId.size.toLong())
+        return OnnxTensor.createTensor(env, LongBuffer.wrap(inputId), shape)
     }
 
     fun sigmoid(x : Float) : Float{

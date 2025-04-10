@@ -32,7 +32,7 @@ class Sheep(
             env = OrtEnvironment.getEnvironment()
             Log.d(TAG, "Initializing ONNX model...")
             val modelPath: String? = copyAssetInInternalStorage(context, assetModelFilename)
-            session = env.createSession(modelPath, OrtSession.SessionOptions())
+            session = env.createSession(modelPath)
         } catch (e: OrtException) {
             Log.d(TAG, "Error Initializing ONNX model: ${e.message}")
         }

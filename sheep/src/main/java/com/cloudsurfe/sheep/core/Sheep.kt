@@ -26,14 +26,13 @@ class Sheep(
 
     private lateinit var env: OrtEnvironment
     private lateinit var session: OrtSession
-    private lateinit var name: String
 
     init {
         try {
             env = OrtEnvironment.getEnvironment()
             Log.d(TAG, "Initializing ONNX model...")
             val modelPath: String? = copyAssetInInternalStorage(context, assetModelFilename)
-            session = env.createSession(modelPath)
+            session = env.createSession(modelPath, OrtSession.SessionOptions())
         } catch (e: OrtException) {
             Log.d(TAG, "Error Initializing ONNX model: ${e.message}")
         }
@@ -99,7 +98,7 @@ class Sheep(
             *inputText
         ).forEach { (index, inputTensor) ->
             val inputMap: Map<String, OnnxTensor> = mapOf("input_ids" to inputTensor)
-            val result = session.run(inputMap)
+            val result = session.run(inputMap,)
             val optionalOutput = result.get("last_hidden_state")
             if (optionalOutput.isPresent) {
                 val outputTensor = optionalOutput.get() as OnnxTensor

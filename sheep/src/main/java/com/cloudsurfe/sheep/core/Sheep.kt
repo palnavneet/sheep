@@ -1,6 +1,5 @@
 package com.cloudsurfe.sheep.core
 
-import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtException
 import ai.onnxruntime.OrtSession
@@ -9,12 +8,11 @@ import android.util.Log
 import com.cloudsurfe.sheep.pipeline.Pipeline
 import com.cloudsurfe.sheep.pipeline.PipelineType
 import com.cloudsurfe.sheep.pipeline.TextClassificationFineTuned
-//import com.cloudsurfe.sheep.pipeline.TextClassification
+import com.cloudsurfe.sheep.pipeline.TextClassification
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
 import com.cloudsurfe.sheep.tokenizer.TokenizerType
 import com.cloudsurfe.sheep.tokenizer.WordPiece
 import com.cloudsurfe.sheep.util.copyAssetInInternalStorage
-import java.nio.LongBuffer
 
 
 class Sheep(
@@ -40,7 +38,7 @@ class Sheep(
 
     }
 
-    fun run(pipelineType: PipelineType): List<Map<Int, String>> {
+    fun run(pipelineType: PipelineType): List<Map<String, String>> {
 
         if (!::session.isInitialized) {
             Log.d(TAG, "Onnx session is not initialized")
@@ -49,7 +47,8 @@ class Sheep(
         // How can I check if session is initialised here
         val resolvedPipeline = when (pipelineType) {
             is PipelineType.CustomPipeline -> pipeline
-            is PipelineType.TextSimilarity -> TextClassificationFineTuned()
+            is PipelineType.TextClassification -> TextClassification()
+            is PipelineType.TextClassificationFineTuned -> TextClassificationFineTuned()
         }
         val resolvedTokenizer = when (tokenizer) {
             is TokenizerType.CustomTokenizer -> tokenizer.tokenizer
@@ -68,26 +67,24 @@ class Sheep(
                 )
             }
 
-            is PipelineType.TextSimilarity -> {
-//                resolvedPipeline.getOutputTensor(
-//                    session,
-//                    env,
-//                    resolvedTokenizer,
-//                    pipelineType.input1,
-//                ).forEach { outputTensor ->
-//                    val float3DArray = outputTensor.value as Array<Array<FloatArray>>
-//                    Log.d("Sheep", "$float3DArray")
-//                    Log.d("Sheep", "Batch size: ${float3DArray.size}")
-//                    Log.d("Sheep", "Sequence length: ${float3DArray[0].size}")
-//                    Log.d("Sheep", "Hidden size: ${float3DArray[0][0].size}")
-//                }
-                Log.d(TAG, "Inside run")
+            is PipelineType.TextClassification -> {
                 return resolvedPipeline.pipeline(
                     resolvedPipeline.getOutputTensor(
                         session,
                         env,
                         resolvedTokenizer,
-                        pipelineType.input1,
+                        pipelineType.input,
+                    )
+                )
+            }
+
+            is PipelineType.TextClassificationFineTuned -> {
+                return resolvedPipeline.pipeline(
+                    resolvedPipeline.getOutputTensor(
+                        session,
+                        env,
+                        resolvedTokenizer,
+                        pipelineType.input,
                     )
                 )
             }

@@ -6,28 +6,29 @@ import ai.onnxruntime.OrtSession
 import android.util.Log
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
 import java.nio.LongBuffer
-import kotlin.math.exp
 
 
 class TextClassificationFineTuned() : Pipeline {
 
     override val numberOfInputs: Int = 1
-    override fun pipeline(onnxTensors: List<Map<String, OnnxTensor>>): List<Map<Int, String>> {
-        val float2dArray = onnxTensors.withIndex().forEachIndexed { index, onnxTensor ->
+    override fun pipeline(onnxTensors: List<Map<String, OnnxTensor>>): List<Map<String, String>> {
+        val output = mutableListOf<Map<String, String>>()
+        onnxTensors.withIndex().forEachIndexed { index, onnxTensor ->
             val outputTensor = onnxTensors[index]
-            val float3DArray = outputTensor["logits"]?.value as Array<FloatArray>
-            Log.d("Sheep", "$float3DArray")
-            Log.d("Sheep", "Batch size: ${float3DArray.size}")
-            Log.d("Sheep", "Sequence length: ${float3DArray[0].size}")
-            Log.d("Sheep", "inside pipeline")
-            val clsEmbedding : FloatArray = float3DArray[0]
-            val weights = FloatArray(768){0.01f}
-            val bias = 0.0f
-            val score = classify(clsEmbedding,weights,bias)
-            val label = if (score > 0.5f) "positive" else "negative"
-            Log.d("Sheep", "$score")
+            val float2dArray = outputTensor["logits"]?.value as Array<FloatArray>
+            val logits = float2dArray[0]
+            val softmaxlogits = softmax(logits)
+            val labels = listOf("Negative","Positive")
+            val predictedIndex = softmaxlogits.indices.maxByOrNull { softmaxlogits[it] } ?: -1
+            val predictedLabel = labels[predictedIndex]
+            val confidence = softmaxlogits[predictedIndex] * 100
+            output.add(mapOf(
+                "predicted_label" to predictedLabel,
+                "confidence" to "%.2f".format(confidence)
+            ))
         }
-        return emptyList()
+
+        return output
     }
 
     override fun getOutputTensor(
@@ -58,11 +59,8 @@ class TextClassificationFineTuned() : Pipeline {
                 if (optionalOutput.isPresent && optionalOutput.get() is OnnxTensor) {
                     val outputTensor = optionalOutput.get() as OnnxTensor
                     outputs.add(mapOf("logits" to outputTensor))
-                    Log.d("Sheep", "Output tensor")
                 }
-
             }
-
         }
         return outputs
     }
@@ -72,7 +70,6 @@ class TextClassificationFineTuned() : Pipeline {
         tokenizer: Tokenizer,
         vararg inputText: String
     ): List<Map<String, OnnxTensor>> {
-        Log.d("Sheep", "Input tensor")
         return tokenizer(
             tokenizer,
             *inputText
@@ -111,16 +108,11 @@ class TextClassificationFineTuned() : Pipeline {
             if (inputId != 0L) 1L else 0L
         }.toLongArray()
     }
-    fun sigmoid(x: Float): Float {
-        return 1f / (1f + exp(-x))
-    }
 
-    fun classify(clsEmbedding: FloatArray, weights: FloatArray, bias: Float): Float {
-        var sum = 0f
-        for (i in clsEmbedding.indices) {
-            sum += clsEmbedding[i] * weights[i]
-        }
-        return sigmoid(sum + bias)
+    fun softmax(logits: FloatArray, temperature: Float = 2.0f): FloatArray {
+        val exp = logits.map { Math.exp((it / temperature).toDouble()) }
+        val sumExp = exp.sum()
+        return exp.map { (it / sumExp).toFloat() }.toFloatArray()
     }
 }
 

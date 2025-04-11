@@ -8,7 +8,7 @@ import com.cloudsurfe.sheep.tokenizer.Tokenizer
 interface Pipeline {
     val numberOfInputs: Int
 
-    fun pipeline(onnxTensors: List<Map<String, OnnxTensor>>): List<Map<Int, String>>
+    fun pipeline(onnxTensors: List<Map<String, OnnxTensor>>): List<Map<String, String>>
     fun getOutputTensor(session: OrtSession, env: OrtEnvironment, tokenizer: Tokenizer, vararg inputText: String): List<Map<String, OnnxTensor>>
 
     fun getInputTensor(env: OrtEnvironment, tokenizer: Tokenizer, vararg inputText: String): List<Map<String, OnnxTensor>>

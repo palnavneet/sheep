@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
             "vocab.txt"
         )
         val label = sheep.run(
-            PipelineType.TextClassification("Hey am I your friend")
+            PipelineType.TextClassification("I love you")
         )
         val predictedLabel = label[0]["predicted_label"]
         val confidence = label[0]["confidence"]

@@ -16,12 +16,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val sheep = Sheep(
             this,
-            TextClassification(),
             TokenizerType.WordPiece,
             "distilbert_model_quantized.onnx",
             "vocab.txt"
         )
-        val label = sheep.run()
+        val label = sheep.run("We are best friends")
         val predictedLabel = label[0]["predicted_label"]
         val confidence = label[0]["confidence"]
         Log.d("Sheep", "$predictedLabel")

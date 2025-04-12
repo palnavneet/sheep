@@ -23,7 +23,7 @@ class Sheep(
 
     private lateinit var env: OrtEnvironment
     private lateinit var session: OrtSession
-    private lateinit var pipeline: Pipeline
+    private lateinit var pipeline : Pipeline
 
     init {
         try {
@@ -38,23 +38,21 @@ class Sheep(
 
     }
 
-    fun run(a: String): List<Map<String, String>> {
+    fun run(a : String) : List<Map<String, String>>{
         return runInference(a)
     }
-
-    fun run(a: String, b: String): List<Map<String, String>> {
-        return runInference(a, b)
+    fun run(a : String, b : String) : List<Map<String, String>>{
+        return runInference(a,b)
     }
 
-    fun run(a: String, b: String, c: String): List<Map<String, String>> {
-        return runInference(a, b, c)
+    fun run(a : String,b : String,c : String) : List<Map<String, String>>{
+        return runInference(a,b,c)
     }
-
-    fun run(vararg inputs: String): List<Map<String, String>> {
+    fun run(vararg inputs : String) : List<Map<String, String>>{
         return runInference(*inputs)
     }
 
-    private fun runInference(vararg input: String): List<Map<String, String>> {
+    private fun runInference(vararg input : String): List<Map<String, String>> {
 
         if (!::session.isInitialized) {
             Log.d(TAG, "Onnx session is not initialized")
@@ -66,18 +64,16 @@ class Sheep(
             ModelType.TEXT_CLASSIFICATION -> {
                 TextClassificationFineTuned()
             }
-
             ModelType.FEATURE_EXTRACTOR -> {
                 TextClassification()
             }
-
             ModelType.UNKNOWN -> pipeline
         }
         val resolvedTokenizer = when (tokenizer) {
             is TokenizerType.CustomTokenizer -> tokenizer.tokenizer
             TokenizerType.WordPiece -> WordPiece(context, assetModelVocabFile)
         }
-        when (modelMetaData.type) {
+        when(modelMetaData.type){
             ModelType.TEXT_CLASSIFICATION -> {
                 return resolvedPipeline.pipeline(
                     resolvedPipeline.getOutputTensor(
@@ -88,7 +84,6 @@ class Sheep(
                     )
                 )
             }
-
             ModelType.FEATURE_EXTRACTOR -> {
                 return resolvedPipeline.pipeline(
                     resolvedPipeline.getOutputTensor(
@@ -99,7 +94,6 @@ class Sheep(
                     )
                 )
             }
-
             ModelType.UNKNOWN -> {
                 return resolvedPipeline.pipeline(
                     resolvedPipeline.getOutputTensor(
@@ -175,7 +169,7 @@ class Sheep(
             assetModelFileName,
             assetModelVocabFile
         ).apply {
-            pipeline = this.pipeline
+            this.pipeline = this@Builder.pipeline
         }
     }
 

@@ -6,6 +6,7 @@ import ai.onnxruntime.OrtSession
 import android.content.Context
 import android.util.Log
 import com.cloudsurfe.sheep.pipeline.Pipeline
+import com.cloudsurfe.sheep.pipeline.PipelineType
 import com.cloudsurfe.sheep.pipeline.TextClassification
 import com.cloudsurfe.sheep.pipeline.TextClassificationFineTuned
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
@@ -61,20 +62,20 @@ class Sheep(
         val modelMetaData = detectModelPipeline(session)
         // How can I check if session is initialised here
         val resolvedPipeline = when (modelMetaData.type) {
-            ModelType.TEXT_CLASSIFICATION -> {
+            PipelineType.TEXT_CLASSIFICATION -> {
                 TextClassificationFineTuned()
             }
-            ModelType.FEATURE_EXTRACTOR -> {
+            PipelineType.FEATURE_EXTRACTOR -> {
                 TextClassification()
             }
-            ModelType.UNKNOWN -> pipeline
+            PipelineType.UNKNOWN -> pipeline
         }
         val resolvedTokenizer = when (tokenizer) {
             is TokenizerType.CustomTokenizer -> tokenizer.tokenizer
             TokenizerType.WordPiece -> WordPiece(context, assetModelVocabFile)
         }
         when(modelMetaData.type){
-            ModelType.TEXT_CLASSIFICATION -> {
+            PipelineType.TEXT_CLASSIFICATION -> {
                 return resolvedPipeline.pipeline(
                     resolvedPipeline.getOutputTensor(
                         session,
@@ -84,7 +85,7 @@ class Sheep(
                     )
                 )
             }
-            ModelType.FEATURE_EXTRACTOR -> {
+            PipelineType.FEATURE_EXTRACTOR -> {
                 return resolvedPipeline.pipeline(
                     resolvedPipeline.getOutputTensor(
                         session,
@@ -94,7 +95,7 @@ class Sheep(
                     )
                 )
             }
-            ModelType.UNKNOWN -> {
+            PipelineType.UNKNOWN -> {
                 return resolvedPipeline.pipeline(
                     resolvedPipeline.getOutputTensor(
                         session,

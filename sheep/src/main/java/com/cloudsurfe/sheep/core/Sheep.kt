@@ -40,7 +40,7 @@ class Sheep(
     }
 
 
-    fun run(vararg input : String): List<Map<String, String>> {
+    fun <T>run(vararg input : Pair<String, T>): List<Map<String, String>> {
 
         if (!::session.isInitialized) {
             Log.d(TAG, "Onnx session is not initialized")

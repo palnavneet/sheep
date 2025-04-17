@@ -6,7 +6,6 @@ import ai.onnxruntime.OrtSession
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
 import java.nio.LongBuffer
 import kotlin.collections.toFloatArray
-import kotlin.math.exp
 
 class TextClassification(
 ) : Pipeline {
@@ -47,17 +46,19 @@ class TextClassification(
         return output
     }
 
-    override fun getOutputTensor(
+    override fun <T> getOutputTensor(
         session: OrtSession,
         env: OrtEnvironment,
         tokenizer: Tokenizer,
-        vararg inputText: String
+        vararg input: Pair<String, T>
     ): List<Map<String, OnnxTensor>> {
+        val inputMap = mapOf(*input)
+        val requiredInputs = inputMap["inputs"] as List<String>
         val outputs = mutableListOf<Map<String, OnnxTensor>>()
         getInputTensor(
             env,
             tokenizer,
-            *inputText
+            requiredInputs
         ).forEach { inputTensorWithMask ->
             val inputIdsInputTensor = inputTensorWithMask["input_Ids"]
             if (inputIdsInputTensor != null) {
@@ -81,11 +82,11 @@ class TextClassification(
     override fun getInputTensor(
         env: OrtEnvironment,
         tokenizer: Tokenizer,
-        vararg inputText: String
+        input: List<String>
     ): List<Map<String, OnnxTensor>> {
         return tokenizer(
             tokenizer,
-            *inputText
+            input
         ).map { input_Id ->
             val inputMap = mutableMapOf<String, OnnxTensor>()
             inputMap["input_Ids"] = shape(env, input_Id)
@@ -95,12 +96,12 @@ class TextClassification(
 
     override fun tokenizer(
         tokenizer: Tokenizer,
-        vararg inputText: String
+        input : List<String>
     ): List<LongArray> {
         tokenizer.apply {
             loadVocab()
         }
-        return inputText.map { text -> tokenizer.tokenize(text) }
+        return input.map { text -> tokenizer.tokenize(text) }
     }
 
     override fun shape(env: OrtEnvironment, inputId: LongArray): OnnxTensor {

@@ -31,18 +31,26 @@ class TextClassificationFineTuned() : Pipeline {
         return output
     }
 
-    override fun getOutputTensor(
+    override fun <T>getOutputTensor(
         session: OrtSession,
         env: OrtEnvironment,
         tokenizer: Tokenizer,
-        vararg inputText: String
+        vararg input : Pair<String, T>
     ): List<Map<String, OnnxTensor>> {
-
+        val inputMap = mapOf(*input)
+        Log.d("Sheep", "getOutputTensor: About to crash")
+        val rawInputs = inputMap["input"]
+        val requiredInputs : List<String> = when(rawInputs){
+            is String -> listOf(rawInputs)
+            is List<*> -> rawInputs.filterIsInstance<String>()
+            else -> throw IllegalArgumentException("Unsupported input type for 'inputs'")
+        }
+        Log.d("Sheep", "getOutputTensor: crashed")
         val outputs = mutableListOf<Map<String, OnnxTensor>>()
         getInputTensor(
             env,
             tokenizer,
-            *inputText
+            requiredInputs
         ).forEach { inputTensorWithMask ->
             val inputIdsInputTensor = inputTensorWithMask["input_Ids"]
             val attentionMaskInputTensor = inputTensorWithMask["attention_mask"]
@@ -68,11 +76,11 @@ class TextClassificationFineTuned() : Pipeline {
     override fun getInputTensor(
         env: OrtEnvironment,
         tokenizer: Tokenizer,
-        vararg inputText: String
+        input : List<String>
     ): List<Map<String, OnnxTensor>> {
         return tokenizer(
             tokenizer,
-            *inputText
+            input
         ).map { input_Id ->
             val attention_mask = getStandardInputComponents(input_Id)
             val inputMap = mutableMapOf<String, OnnxTensor>()
@@ -85,13 +93,13 @@ class TextClassificationFineTuned() : Pipeline {
 
     override fun tokenizer(
         tokenizer: Tokenizer,
-        vararg inputText: String
+        input : List<String>
     ): List<LongArray> {
         Log.d("Sheep", "Tokenizer")
         tokenizer.apply {
             loadVocab()
         }
-        return inputText.map { text -> tokenizer.tokenize(text) }
+        return input.map { text -> tokenizer.tokenize(text) }
     }
 
     override fun shape(

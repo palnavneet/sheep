@@ -17,15 +17,21 @@ class MainActivity : ComponentActivity() {
             "distilbert_classification_quantized.onnx",
             "vocab.txt"
         )
-        val label = sheep.run("input" to listOf("Hey How was your day?","I think we are enemies"))
-        val predictedLabel = label[0]["predicted_label"]
-        val confidence = label[0]["confidence"]
-        Log.d("Sheep", "$predictedLabel")
-        Log.d("Sheep", "$confidence")
-        val predictedLabel1 = label[1]["predicted_label"]
-        val confidence1 = label[1]["confidence"]
-        Log.d("Sheep", "$predictedLabel1")
-        Log.d("Sheep", "$confidence1")
+        if (sheep.isInitialized){
+            val label = sheep.run("input" to listOf("Hey How was your day?", "I think we are enemies","I will kill you"))
+            val predictedLabel = label[0]["predicted_label"]
+            val confidence = label[0]["confidence"]
+            Log.d("Sheep", "$predictedLabel")
+            Log.d("Sheep", "$confidence")
+            val predictedLabel1 = label[1]["predicted_label"]
+            val confidence1 = label[1]["confidence"]
+            Log.d("Sheep", "$predictedLabel1")
+            Log.d("Sheep", "$confidence1")
+            val predictedLabel2 = label[2]["predicted_label"]
+            val confidence2 = label[2]["confidence"]
+            Log.d("Sheep", "$predictedLabel2")
+            Log.d("Sheep", "$confidence2")
+        }
     }
 }
 

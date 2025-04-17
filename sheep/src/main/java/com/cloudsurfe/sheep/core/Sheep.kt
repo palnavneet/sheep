@@ -25,6 +25,7 @@ class Sheep(
     private lateinit var env: OrtEnvironment
     private lateinit var session: OrtSession
     private lateinit var pipeline : Pipeline
+    var isInitialized : Boolean = false
 
     init {
         try {
@@ -33,6 +34,7 @@ class Sheep(
             val modelPath: String? = copyAssetInInternalStorage(context, assetModelFilename)
             val sessionOptions = OrtSession.SessionOptions()
             session = env.createSession(modelPath, sessionOptions)
+            isInitialized = true
         } catch (e: OrtException) {
             Log.d(TAG, "Error Initializing ONNX model: ${e.message}")
         }
@@ -93,41 +95,6 @@ class Sheep(
                 )
             }
         }
-//        when (pipelineType) {
-//            is PipelineType.CustomPipeline -> {
-//                return resolvedPipeline.pipeline(
-//                    resolvedPipeline.getOutputTensor(
-//                        session,
-//                        env,
-//                        resolvedTokenizer,
-//                        *pipelineType.inputs
-//                    )
-//                )
-//            }
-//
-//            is PipelineType.TextClassification -> {
-//                return resolvedPipeline.pipeline(
-//                    resolvedPipeline.getOutputTensor(
-//                        session,
-//                        env,
-//                        resolvedTokenizer,
-//                        pipelineType.input,
-//                    )
-//                )
-//            }
-//
-//            is PipelineType.TextClassificationFineTuned -> {
-//                return resolvedPipeline.pipeline(
-//                    resolvedPipeline.getOutputTensor(
-//                        session,
-//                        env,
-//                        resolvedTokenizer,
-//                        pipelineType.input,
-//                    )
-//                )
-//            }
-//        }
-
     }
 
     companion object {

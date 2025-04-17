@@ -5,9 +5,6 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import com.cloudsurfe.sheep.core.Sheep
-import com.cloudsurfe.sheep.pipeline.PipelineType
-import com.cloudsurfe.sheep.pipeline.TextClassification
-import com.cloudsurfe.sheep.pipeline.TextClassificationFineTuned
 import com.cloudsurfe.sheep.tokenizer.TokenizerType
 import com.cloudsurfe.sheep.tokenizer.WordPiece
 
@@ -17,7 +14,7 @@ class MainActivity : ComponentActivity() {
         val sheep = Sheep(
             this,
             TokenizerType.WordPiece,
-            "distilbert_model_quantized.onnx",
+            "distilbert_classification_quantized.onnx",
             "vocab.txt"
         )
         val label = sheep.run("We are best friends")

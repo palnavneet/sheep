@@ -39,21 +39,8 @@ class Sheep(
 
     }
 
-    fun run(a : String) : List<Map<String, String>>{
-        return runInference(a)
-    }
-    fun run(a : String, b : String) : List<Map<String, String>>{
-        return runInference(a,b)
-    }
 
-    fun run(a : String,b : String,c : String) : List<Map<String, String>>{
-        return runInference(a,b,c)
-    }
-    fun run(vararg inputs : String) : List<Map<String, String>>{
-        return runInference(*inputs)
-    }
-
-    private fun runInference(vararg input : String): List<Map<String, String>> {
+    fun run(vararg input : String): List<Map<String, String>> {
 
         if (!::session.isInitialized) {
             Log.d(TAG, "Onnx session is not initialized")

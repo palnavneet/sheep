@@ -22,6 +22,7 @@ fun detectModelPipeline(session: OrtSession): ModelMeta {
     val modelType = when {
         outputShape.size == 2 && outputName == "logits" -> PipelineType.TEXT_CLASSIFICATION
         outputShape.size == 3 && outputName == "last_hidden_state" -> PipelineType.FEATURE_EXTRACTOR
+        inputs.contains("input_ids") && inputs.contains("attention_mask") && outputs.containsKey("start_logits") && outputs.containsKey("end_logits") -> PipelineType.QUESTION_ANSWERING
         else -> PipelineType.UNKNOWN
     }
 

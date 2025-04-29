@@ -10,7 +10,6 @@ import kotlin.collections.toFloatArray
 class TextClassification(
 ) : Pipeline {
 
-    override val numberOfInputs: Int = 1
     override fun pipeline(onnxTensors: List<Map<String, OnnxTensor>>): List<Map<String, String>> {
         val output = mutableListOf<Map<String, String>>()
         onnxTensors.withIndex().forEachIndexed { index, outputTensor ->

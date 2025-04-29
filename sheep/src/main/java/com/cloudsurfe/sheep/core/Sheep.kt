@@ -7,6 +7,7 @@ import android.content.Context
 import android.util.Log
 import com.cloudsurfe.sheep.pipeline.Pipeline
 import com.cloudsurfe.sheep.pipeline.PipelineType
+import com.cloudsurfe.sheep.pipeline.QuestionAnswering
 import com.cloudsurfe.sheep.pipeline.TextClassification
 import com.cloudsurfe.sheep.pipeline.TextClassificationFineTuned
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
@@ -57,6 +58,9 @@ class Sheep(
             PipelineType.FEATURE_EXTRACTOR -> {
                 TextClassification()
             }
+            PipelineType.QUESTION_ANSWERING -> {
+                QuestionAnswering()
+            }
             PipelineType.UNKNOWN -> pipeline
         }
         val resolvedTokenizer = when (tokenizer) {
@@ -75,6 +79,16 @@ class Sheep(
                 )
             }
             PipelineType.FEATURE_EXTRACTOR -> {
+                return resolvedPipeline.pipeline(
+                    resolvedPipeline.getOutputTensor(
+                        session,
+                        env,
+                        resolvedTokenizer,
+                        *input,
+                    )
+                )
+            }
+            PipelineType.QUESTION_ANSWERING -> {
                 return resolvedPipeline.pipeline(
                     resolvedPipeline.getOutputTensor(
                         session,

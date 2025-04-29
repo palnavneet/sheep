@@ -3,39 +3,25 @@ package com.cloudsurfe.sheep.pipeline
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
-import android.util.Log
 import com.cloudsurfe.sheep.pipeline.utlis.generateAttentionMask
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
 import java.nio.LongBuffer
 
-
-class TextClassificationFineTuned() : Pipeline {
+class QuestionAnswering() : Pipeline{
 
     override fun pipeline(onnxTensors: List<Map<String, OnnxTensor>>): List<Map<String, String>> {
         val output = mutableListOf<Map<String, String>>()
-        onnxTensors.withIndex().forEachIndexed { index, onnxTensor ->
-            val outputTensor = onnxTensors[index]
-            val float2dArray = outputTensor["logits"]?.value as Array<FloatArray>
-            val logits = float2dArray[0]
-            val softmaxlogits = softmax(logits)
-            val labels = listOf("Negative","Positive")
-            val predictedIndex = softmaxlogits.indices.maxByOrNull { softmaxlogits[it] } ?: -1
-            val predictedLabel = labels[predictedIndex]
-            val confidence = softmaxlogits[predictedIndex] * 100
-            output.add(mapOf(
-                "predicted_label" to predictedLabel,
-                "confidence" to "%.2f".format(confidence)
-            ))
-        }
+        onnxTensors.withIndex().forEachIndexed{ index, tensorMap ->
 
-        return output
+        }
+        TODO("Not yet implemented")
     }
 
-    override fun <T>getOutputTensor(
+    override fun <T> getOutputTensor(
         session: OrtSession,
         env: OrtEnvironment,
         tokenizer: Tokenizer,
-        vararg input : Pair<String, T>
+        vararg input: Pair<String, T>
     ): List<Map<String, OnnxTensor>> {
         val inputMap = mapOf(*input)
         val rawInputs = inputMap["input"]
@@ -49,24 +35,34 @@ class TextClassificationFineTuned() : Pipeline {
             env,
             tokenizer,
             requiredInputs
-        ).forEach { inputTensorWithMask ->
+        ).forEach {inputTensorWithMask ->
             val inputIdsInputTensor = inputTensorWithMask["input_Ids"]
             val attentionMaskInputTensor = inputTensorWithMask["attention_mask"]
 
-            if (inputIdsInputTensor != null && attentionMaskInputTensor != null) {
+            if (inputIdsInputTensor != null && attentionMaskInputTensor != null){
 
-                val inputMap: Map<String, OnnxTensor> = mapOf(
+                val inputMap : Map<String, OnnxTensor> = mapOf(
                     "input_ids" to inputIdsInputTensor,
                     "attention_mask" to attentionMaskInputTensor
                 )
 
                 val result = session.run(inputMap)
-                val optionalOutput = result.get("logits")
-                if (optionalOutput.isPresent && optionalOutput.get() is OnnxTensor) {
-                    val outputTensor = optionalOutput.get() as OnnxTensor
-                    outputs.add(mapOf("logits" to outputTensor))
+                val startLogitsTensor = result.get("start_logits")
+                val endLogitsTensor = result.get("end_logits")
+
+                if (startLogitsTensor.isPresent && startLogitsTensor.get() is OnnxTensor && endLogitsTensor.isPresent && endLogitsTensor.get() is OnnxTensor){
+                    val startTensor = startLogitsTensor.get() as OnnxTensor
+                    val endTensor = endLogitsTensor.get() as OnnxTensor
+
+                    outputs.add(
+                        mapOf(
+                            "start_logits" to startTensor,
+                            "end_logits" to endTensor
+                        )
+                    )
                 }
             }
+
         }
         return outputs
     }
@@ -74,23 +70,23 @@ class TextClassificationFineTuned() : Pipeline {
     override fun getInputTensor(
         env: OrtEnvironment,
         tokenizer: Tokenizer,
-        input : List<String>
+        input: List<String>
     ): List<Map<String, OnnxTensor>> {
         return tokenizer(
             tokenizer,
             input
-        ).map { input_Id ->
-            val attention_mask = generateAttentionMask(input_Id)
+        ).map { input_id ->
+            val attention_mask = generateAttentionMask(input_id)
             val inputMap = mutableMapOf<String, OnnxTensor>()
-            inputMap["input_Ids"] = shape(env, input_Id)
-            inputMap["attention_mask"] = shape(env, attention_mask)
+            inputMap["input_Ids"] = shape(env,input_id)
+            inputMap["attention_mask"] = shape(env,attention_mask)
             inputMap
         }
     }
 
     override fun tokenizer(
         tokenizer: Tokenizer,
-        input : List<String>
+        input: List<String>
     ): List<LongArray> {
         tokenizer.apply {
             loadVocab()
@@ -102,14 +98,9 @@ class TextClassificationFineTuned() : Pipeline {
         env: OrtEnvironment,
         inputId: LongArray
     ): OnnxTensor {
-        val shape: LongArray = longArrayOf(1, inputId.size.toLong())
-        return OnnxTensor.createTensor(env, LongBuffer.wrap(inputId), shape)
+        val shape : LongArray = longArrayOf(1,inputId.size.toLong())
+        return OnnxTensor.createTensor(env, LongBuffer.wrap(inputId),shape)
     }
 
-    fun softmax(logits: FloatArray, temperature: Float = 2.0f): FloatArray {
-        val exp = logits.map { Math.exp((it / temperature).toDouble()) }
-        val sumExp = exp.sum()
-        return exp.map { (it / sumExp).toFloat() }.toFloatArray()
-    }
+
 }
-

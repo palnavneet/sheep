@@ -6,14 +6,26 @@
   <img src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" width="250"/>
 </p>
 
+
 <p align="center">
-  Sheep lets you run popular NLP models like DistilBERT directly on Android using ONNX Runtime.  
-  It comes with built-in tokenizers (like WordPiece) and also supports custom pipelines and tokenizers out of the box.
+Sheep-NLP-Android is an open-source Kotlin-based library designed to integrate advanced Natural Language Processing (NLP)
+capabilities into Android applications using ONNX Runtime. It provides developers with easy access to pre-trained NLP models, 
+allowing for tasks like tokenization, sentiment analysis, text classification, and more on Android devices.
 </p>
 
 <br>
 
+## Key Features
+
+- **ONNX Runtime Integration**: Efficiently run quantized NLP models on Android devices.
+- **Custom Tokenizers**: Includes built-in tokenizers like WordPiece, with support for custom tokenizers.
+- **Lightweight and Fast**: Optimized for mobile devices with minimal memory and CPU usage.
+- **Pre-trained Model Support**: Run popular NLP models, including DistilBERT, for a variety of tasks.
+- **Custom Pipelines**: Supports easy integration of custom NLP pipelines for specific use cases.
+- **Open-Source**: Fully open-source and easy to extend for your specific needs.
+
 ---
+
 
 | 🧠 Model       | ⚙️ Type         | 🧩 Pipelines Supported         | 🔤 Tokenizer Support         | 📊 Status       |
 |---------------|------------------|-------------------------------|------------------------------|-----------------|

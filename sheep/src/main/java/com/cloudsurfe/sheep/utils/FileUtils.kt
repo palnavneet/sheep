@@ -1,4 +1,4 @@
-package com.cloudsurfe.sheep.util
+package com.cloudsurfe.sheep.utils
 
 import android.content.Context
 import android.util.Log

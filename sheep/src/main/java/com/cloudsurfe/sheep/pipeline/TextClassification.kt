@@ -3,17 +3,19 @@ package com.cloudsurfe.sheep.pipeline
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
+import com.cloudsurfe.sheep.model.ModelOutputBundle
+import com.cloudsurfe.sheep.model.TokenizationResultSet
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
+import com.cloudsurfe.sheep.utils.generateAttentionMask
 import java.nio.LongBuffer
 import kotlin.collections.toFloatArray
 
 class TextClassification(
 ) : Pipeline {
 
-    override fun pipeline(onnxTensors: List<Map<String, OnnxTensor>>): List<Map<String, String>> {
+    override fun pipeline(modelOutputBundle: ModelOutputBundle): List<Map<String, String>> {
         val output = mutableListOf<Map<String, String>>()
-        onnxTensors.withIndex().forEachIndexed { index, outputTensor ->
-            val outputTensor = onnxTensors[index]
+        modelOutputBundle.tensors.forEach{ outputTensor ->
             val float3dArray = outputTensor["last_hidden_state"]?.value as Array<Array<FloatArray>>
             val labels = listOf("Negative", "Positive")
             val clsEmbedding = float3dArray[0][0]
@@ -50,15 +52,12 @@ class TextClassification(
         env: OrtEnvironment,
         tokenizer: Tokenizer,
         vararg input: Pair<String, T>
-    ): List<Map<String, OnnxTensor>> {
+    ): ModelOutputBundle {
         val inputMap = mapOf(*input)
         val requiredInputs = inputMap["inputs"] as List<String>
+        val inputTensorBundle = getInputTensor(env,tokenizer,requiredInputs)
         val outputs = mutableListOf<Map<String, OnnxTensor>>()
-        getInputTensor(
-            env,
-            tokenizer,
-            requiredInputs
-        ).forEach { inputTensorWithMask ->
+        inputTensorBundle.tensors.forEach { inputTensorWithMask ->
             val inputIdsInputTensor = inputTensorWithMask["input_Ids"]
             if (inputIdsInputTensor != null) {
 
@@ -75,32 +74,47 @@ class TextClassification(
                 }
             }
         }
-        return outputs
+        return ModelOutputBundle(
+            tensors = outputs,
+            tokenizationResultSet = inputTensorBundle.tokenizationResultSet
+        )
     }
 
     override fun getInputTensor(
         env: OrtEnvironment,
         tokenizer: Tokenizer,
         input: List<String>
-    ): List<Map<String, OnnxTensor>> {
-        return tokenizer(
-            tokenizer,
-            input
-        ).map { input_Id ->
-            val inputMap = mutableMapOf<String, OnnxTensor>()
-            inputMap["input_Ids"] = shape(env, input_Id)
-            inputMap
+    ): ModelOutputBundle {
+        val tokenizationResultSet : TokenizationResultSet = tokenizer(tokenizer, input)
+        val tensors: List<Map<String, OnnxTensor>> = tokenizationResultSet.tokenizedInput.map { inputId ->
+            mapOf(
+                "input_Ids" to shape(env,inputId)
+            )
         }
+        return ModelOutputBundle(
+            tensors = tensors,
+            tokenizationResultSet = tokenizationResultSet
+        )
     }
 
     override fun tokenizer(
         tokenizer: Tokenizer,
-        input : List<String>
-    ): List<LongArray> {
+        input: List<String>
+    ): TokenizationResultSet {
         tokenizer.apply {
             loadVocab()
         }
-        return input.map { text -> tokenizer.tokenize(text) }
+        val tokenizedInput = input.map { text -> tokenizer.tokenize(text) }
+        val detokenizedInput = tokenizedInput.map {tokenizedInput ->
+            tokenizedInput.joinToString(","){
+                tokenizer.deTokenize(it.toInt())
+            }
+        }
+        return TokenizationResultSet(
+            input = input,
+            tokenizedInput = tokenizedInput,
+            detokenizedInput = detokenizedInput
+        )
     }
 
     override fun shape(env: OrtEnvironment, inputId: LongArray): OnnxTensor {

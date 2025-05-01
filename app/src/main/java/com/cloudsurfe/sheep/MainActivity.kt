@@ -7,16 +7,29 @@ import androidx.activity.ComponentActivity
 import com.cloudsurfe.sheep.core.Sheep
 import com.cloudsurfe.sheep.tokenizer.TokenizerType
 import com.cloudsurfe.sheep.tokenizer.WordPiece
+import com.cloudsurfe.sheep.utils.computeOffsetMapping
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val runtime = Runtime.getRuntime()
+        val memoryBefore = runtime.totalMemory() - runtime.freeMemory()
+        Log.d("memoryBefore", "$memoryBefore")
+//        val sheep = Sheep(
+//            this,
+//            TokenizerType.WordPiece,
+//            "model_quant.onnx",
+//            "vocab.txt"
+//        )
+//        sheep.run("input" to listOf("Hey How are you?"))
         val sheep = Sheep(
             this,
             TokenizerType.WordPiece,
             "distilbert_classification_quantized.onnx",
             "vocab.txt"
         )
+        val memoryAfter = runtime.totalMemory() - runtime.freeMemory()
+        Log.d("memoryAfter", "$memoryAfter")
         if (sheep.isInitialized){
             val label = sheep.run("input" to listOf("Hey How was your day?", "I think we are enemies","I will kill you"))
             val predictedLabel = label[0]["predicted_label"]
@@ -32,6 +45,7 @@ class MainActivity : ComponentActivity() {
             Log.d("Sheep", "$predictedLabel2")
             Log.d("Sheep", "$confidence2")
         }
+        checkTokenizer(this)
     }
 }
 
@@ -44,8 +58,11 @@ fun checkTokenizer(context: Context) {
 
     Log.d("TokenizerTest", "Input: $input")
     Log.d("TokenizerTest", "Token IDs: ${tokenIds.joinToString()}")
-    val decoded = tokenIds.joinToString(" ") {
+    val decoded = tokenIds.joinToString(",") {
         tokenizer.deTokenize(it.toInt())
-    }
+    }.split(",")
     Log.d("TokenizerTest", "Decoded: $decoded")
+    val offsetMapping = computeOffsetMapping(decoded,input)
+    Log.d("TokenizerTest", "OffSetMapping: $offsetMapping")
+
 }

@@ -13,6 +13,7 @@ class WordPiece(
 
     private val idToToken: MutableMap<Int, String> = HashMap()
     private val tokenToId: MutableMap<String, Int> = HashMap()
+    private val whitespaceRegex = "\\s+".toRegex()
     private var isVocabLoaded = false
 
     override fun loadVocab() {
@@ -39,7 +40,7 @@ class WordPiece(
         val clsId = tokenToId.getOrDefault("[CLS]", 101)
         val sepId = tokenToId.getOrDefault("[SEP]", 102)
 
-        val words = inputText.trim().lowercase().split("\\s+".toRegex())
+        val words = inputText.trim().lowercase().split(whitespaceRegex)
         val inputIds = LongArray(words.size + 2)
         inputIds[0] = clsId.toLong()
         words.forEachIndexed { index, word ->

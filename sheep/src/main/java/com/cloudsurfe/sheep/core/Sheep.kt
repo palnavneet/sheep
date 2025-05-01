@@ -13,7 +13,7 @@ import com.cloudsurfe.sheep.pipeline.TextClassificationFineTuned
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
 import com.cloudsurfe.sheep.tokenizer.TokenizerType
 import com.cloudsurfe.sheep.tokenizer.WordPiece
-import com.cloudsurfe.sheep.util.copyAssetInInternalStorage
+import com.cloudsurfe.sheep.utils.copyAssetInInternalStorage
 
 
 class Sheep(

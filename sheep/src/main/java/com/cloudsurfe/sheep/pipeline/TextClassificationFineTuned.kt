@@ -3,53 +3,53 @@ package com.cloudsurfe.sheep.pipeline
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
-import android.util.Log
-import com.cloudsurfe.sheep.pipeline.utlis.generateAttentionMask
+import com.cloudsurfe.sheep.model.ModelOutputBundle
+import com.cloudsurfe.sheep.model.TokenizationResultSet
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
+import com.cloudsurfe.sheep.utils.generateAttentionMask
+import com.cloudsurfe.sheep.utils.softmax
 import java.nio.LongBuffer
 
 
 class TextClassificationFineTuned() : Pipeline {
 
-    override fun pipeline(onnxTensors: List<Map<String, OnnxTensor>>): List<Map<String, String>> {
+    override fun pipeline(modelOutputBundle: ModelOutputBundle): List<Map<String, String>> {
         val output = mutableListOf<Map<String, String>>()
-        onnxTensors.withIndex().forEachIndexed { index, onnxTensor ->
-            val outputTensor = onnxTensors[index]
-            val float2dArray = outputTensor["logits"]?.value as Array<FloatArray>
-            val logits = float2dArray[0]
-            val softmaxlogits = softmax(logits)
-            val labels = listOf("Negative","Positive")
-            val predictedIndex = softmaxlogits.indices.maxByOrNull { softmaxlogits[it] } ?: -1
+        modelOutputBundle.tensors.forEach { tensorMap ->
+            val logits = (tensorMap["logits"]?.value as Array<FloatArray>)[0]
+            val softmaxProbabilities = softmax(logits)
+            val labels = listOf("Negative", "Positive")
+            val predictedIndex =
+                softmaxProbabilities.indices.maxByOrNull { softmaxProbabilities[it] } ?: -1
             val predictedLabel = labels[predictedIndex]
-            val confidence = softmaxlogits[predictedIndex] * 100
-            output.add(mapOf(
-                "predicted_label" to predictedLabel,
-                "confidence" to "%.2f".format(confidence)
-            ))
+            val confidence = softmaxProbabilities[predictedIndex] * 100
+            output.add(
+                mapOf(
+                    "predicted_label" to predictedLabel,
+                    "confidence" to "%.2f".format(confidence)
+                )
+            )
         }
 
         return output
     }
 
-    override fun <T>getOutputTensor(
+    override fun <T> getOutputTensor(
         session: OrtSession,
         env: OrtEnvironment,
         tokenizer: Tokenizer,
-        vararg input : Pair<String, T>
-    ): List<Map<String, OnnxTensor>> {
+        vararg input: Pair<String, T>
+    ): ModelOutputBundle {
         val inputMap = mapOf(*input)
         val rawInputs = inputMap["input"]
-        val requiredInputs : List<String> = when(rawInputs){
+        val requiredInputs: List<String> = when (rawInputs) {
             is String -> listOf(rawInputs)
             is List<*> -> rawInputs.filterIsInstance<String>()
             else -> throw IllegalArgumentException("Unsupported input type for 'inputs'")
         }
+        val inputTensorBundle = getInputTensor(env,tokenizer,requiredInputs)
         val outputs = mutableListOf<Map<String, OnnxTensor>>()
-        getInputTensor(
-            env,
-            tokenizer,
-            requiredInputs
-        ).forEach { inputTensorWithMask ->
+        inputTensorBundle.tensors.forEach { inputTensorWithMask ->
             val inputIdsInputTensor = inputTensorWithMask["input_Ids"]
             val attentionMaskInputTensor = inputTensorWithMask["attention_mask"]
 
@@ -68,34 +68,49 @@ class TextClassificationFineTuned() : Pipeline {
                 }
             }
         }
-        return outputs
+        return ModelOutputBundle(
+            tensors = outputs,
+            tokenizationResultSet = inputTensorBundle.tokenizationResultSet
+        )
     }
 
     override fun getInputTensor(
         env: OrtEnvironment,
         tokenizer: Tokenizer,
-        input : List<String>
-    ): List<Map<String, OnnxTensor>> {
-        return tokenizer(
-            tokenizer,
-            input
-        ).map { input_Id ->
-            val attention_mask = generateAttentionMask(input_Id)
-            val inputMap = mutableMapOf<String, OnnxTensor>()
-            inputMap["input_Ids"] = shape(env, input_Id)
-            inputMap["attention_mask"] = shape(env, attention_mask)
-            inputMap
+        input: List<String>
+    ): ModelOutputBundle {
+        val tokenizationResultSet: TokenizationResultSet = tokenizer(tokenizer, input)
+        val tensors: List<Map<String, OnnxTensor>> = tokenizationResultSet.tokenizedInput.map { inputId ->
+            val attention_mask = generateAttentionMask(inputId)
+            mapOf(
+                "input_Ids" to shape(env,inputId),
+                "attention_mask" to shape(env,attention_mask)
+            )
         }
+        return ModelOutputBundle(
+            tensors = tensors,
+            tokenizationResultSet = tokenizationResultSet
+        )
     }
 
     override fun tokenizer(
         tokenizer: Tokenizer,
-        input : List<String>
-    ): List<LongArray> {
+        input: List<String>
+    ): TokenizationResultSet {
         tokenizer.apply {
             loadVocab()
         }
-        return input.map { text -> tokenizer.tokenize(text) }
+        val tokenizedInput = input.map { text -> tokenizer.tokenize(text) }
+        val detokenizedInput = tokenizedInput.map {tokenizedInput ->
+            tokenizedInput.joinToString(","){
+                tokenizer.deTokenize(it.toInt())
+            }
+        }
+        return TokenizationResultSet(
+            input = input,
+            tokenizedInput = tokenizedInput,
+            detokenizedInput = detokenizedInput
+        )
     }
 
     override fun shape(
@@ -106,10 +121,5 @@ class TextClassificationFineTuned() : Pipeline {
         return OnnxTensor.createTensor(env, LongBuffer.wrap(inputId), shape)
     }
 
-    fun softmax(logits: FloatArray, temperature: Float = 2.0f): FloatArray {
-        val exp = logits.map { Math.exp((it / temperature).toDouble()) }
-        val sumExp = exp.sum()
-        return exp.map { (it / sumExp).toFloat() }.toFloatArray()
-    }
 }
 

@@ -72,21 +72,21 @@ class WordPiece(
         return inputIds.toLongArray()
     }
 
-    fun getTokenTypeIds(input : LongArray) : IntArray{
+    override fun getTokenTypeIds(input : LongArray) : LongArray{
         var sepCount = false
         return input.map { input ->
             val token = deTokenize(input.toInt())
             if (token == "[SEP]"){
                 if (!sepCount){
                     sepCount = true
-                    0
+                    0L
                 }else{
-                    1
+                    1L
                 }
             }else{
-                if (!sepCount) 0 else 1
+                if (!sepCount) 0L else 1L
             }
-        }.toIntArray()
+        }.toLongArray()
     }
 
     override fun deTokenize(tokenId: Int) = idToToken.getOrDefault(tokenId, "[UNK]")

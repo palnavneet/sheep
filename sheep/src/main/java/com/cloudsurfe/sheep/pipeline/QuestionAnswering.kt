@@ -28,6 +28,7 @@ class QuestionAnswering() : Pipeline{
             val input = modelOutputBundle.tokenizationResultSet.input[index]
             val tokenizedTextInput = modelOutputBundle.tokenizationResultSet.detokenizedInput[index].split(",")
             val offsets = computeOffsetMapping(tokens = tokenizedTextInput, originalText = input)
+            Log.d("sheep", "pipeline: $input")
             Log.d("sheep", "pipeline: $offsets")
 
 
@@ -46,21 +47,22 @@ class QuestionAnswering() : Pipeline{
         val requiredInputs : List<String> = when(rawInputs){
             is String -> listOf(rawInputs)
             is List<*> -> rawInputs.filterIsInstance<String>()
+            is Pair<*,*> -> listOfNotNull("${rawInputs.first}[SEP]${rawInputs.second}")
             else -> throw IllegalArgumentException("Unsupported input type for 'inputs'")
         }
         val inputTensorBundle = getInputTensor(env,tokenizer,requiredInputs)
         val outputs = mutableListOf<Map<String, OnnxTensor>>()
         inputTensorBundle.tensors.forEach {inputTensorWithMask ->
-            val inputIdsInputTensor = inputTensorWithMask["input_Ids"]
+            val inputIdsInputTensor = inputTensorWithMask["input_ids"]
             val attentionMaskInputTensor = inputTensorWithMask["attention_mask"]
-
-            if (inputIdsInputTensor != null && attentionMaskInputTensor != null){
+            val tokenTypeIds = inputTensorWithMask["token_type_ids"]
+            if (inputIdsInputTensor != null && attentionMaskInputTensor != null && tokenTypeIds != null){
 
                 val inputMap : Map<String, OnnxTensor> = mapOf(
                     "input_ids" to inputIdsInputTensor,
-                    "attention_mask" to attentionMaskInputTensor
+                    "attention_mask" to attentionMaskInputTensor,
+                    "token_type_ids" to tokenTypeIds
                 )
-                // FIXME: Crashes ------------------------------------------------------------------
                 val result = session.run(inputMap)
                 val startLogitsTensor = result.get("start_logits")
                 val endLogitsTensor = result.get("end_logits")
@@ -93,9 +95,11 @@ class QuestionAnswering() : Pipeline{
         val tokenizationResultSet : TokenizationResultSet = tokenizer(tokenizer, input)
         val tensors: List<Map<String, OnnxTensor>> = tokenizationResultSet.tokenizedInput.map { inputId ->
             val attention_mask = generateAttentionMask(inputId)
+            val token_type_ids = tokenizer.getTokenTypeIds(inputId)
             mapOf(
-                "input_Ids" to shape(env,inputId),
-                "attention_mask" to shape(env,attention_mask)
+                "input_ids" to shape(env,inputId),
+                "attention_mask" to shape(env,attention_mask),
+                "token_type_ids" to shape(env,token_type_ids)
             )
         }
         return ModelOutputBundle(
@@ -111,7 +115,7 @@ class QuestionAnswering() : Pipeline{
         tokenizer.apply {
             loadVocab()
         }
-        val tokenizedInput = input.map { text -> tokenizer.tokenize(text) }
+        val tokenizedInput = input.map { text -> tokenizer.tokenize(text,true) }
         val detokenizedInput = tokenizedInput.map {tokenizedInput ->
             tokenizedInput.joinToString(","){
                 tokenizer.deTokenize(it.toInt())

@@ -53,8 +53,8 @@ class MainActivity : ComponentActivity() {
 fun checkTokenizer(context: Context) {
     val tokenizer = WordPiece(context, "vocab.txt")
     tokenizer.loadVocab()
-    val input = "i am using summoning Jutsu"
-    val tokenIds = tokenizer.tokenize(input)
+    val input = "i am using summoning Jutsu [SEP] How are you doing today"
+    val tokenIds = tokenizer.tokenize(input,true)
 
     Log.d("TokenizerTest", "Input: $input")
     Log.d("TokenizerTest", "Token IDs: ${tokenIds.joinToString()}")
@@ -62,6 +62,8 @@ fun checkTokenizer(context: Context) {
         tokenizer.deTokenize(it.toInt())
     }.split(",")
     Log.d("TokenizerTest", "Decoded: $decoded")
+    val tokenIdsXYZ = tokenizer.getTokenTypeIds(tokenIds)
+    Log.d("TokenizerTest", "Token IDs: ${tokenIdsXYZ.joinToString(",")}")
     val offsetMapping = computeOffsetMapping(decoded,input)
     Log.d("TokenizerTest", "OffSetMapping: $offsetMapping")
 

@@ -11,13 +11,15 @@ class WordPiece(
     private val assetVocabFileName: String
 ) : Tokenizer {
 
-    private val idToToken: MutableMap<Int, String> = HashMap()
-    private val tokenToId: MutableMap<String, Int> = HashMap()
+    private lateinit var idToToken: MutableMap<Int, String>
+    private lateinit var tokenToId: MutableMap<String, Int>
     private val whitespaceRegex = "\\s+".toRegex()
     private var isVocabLoaded = false
 
     override fun loadVocab() {
         if (!isVocabLoaded) {
+            idToToken = HashMap()
+            tokenToId = HashMap()
             try {
                 context.assets.open(assetVocabFileName).use { inputStream ->
                     BufferedReader(InputStreamReader(inputStream)).use { reader ->
@@ -34,20 +36,57 @@ class WordPiece(
         }
     }
 
-    override fun tokenize(inputText: String): LongArray {
+    override fun tokenize(inputText: String, isTokenTypeIds: Boolean): LongArray {
         if (!isVocabLoaded) loadVocab()
         val unkId = tokenToId.getOrDefault("[UNK]", 100)
         val clsId = tokenToId.getOrDefault("[CLS]", 101)
         val sepId = tokenToId.getOrDefault("[SEP]", 102)
 
         val words = inputText.trim().lowercase().split(whitespaceRegex)
-        val inputIds = LongArray(words.size + 2)
-        inputIds[0] = clsId.toLong()
-        words.forEachIndexed { index, word ->
-            inputIds[index + 1] = tokenToId.getOrDefault(word, unkId).toLong()
+        val inputIds = mutableListOf<Long>()
+        inputIds.add(clsId.toLong())
+        if (isTokenTypeIds) {
+            val segments = inputText.trim().lowercase().split("\\s*\\[SEP]\\s*".toRegex(RegexOption.IGNORE_CASE), limit = 2)
+            if (segments.size == 2) {
+                segments[0].split(whitespaceRegex).forEach{ word ->
+                    inputIds.add(tokenToId.getOrDefault(word, unkId).toLong())
+                }
+                inputIds.add(sepId.toLong())
+                segments[1].split(whitespaceRegex).forEach{ word ->
+                    inputIds.add(tokenToId.getOrDefault(word,unkId).toLong())
+                }
+                inputIds.add(sepId.toLong())
+
+            } else {
+                words.forEach{ word ->
+                    inputIds.add(tokenToId.getOrDefault(word, unkId).toLong())
+                }
+                inputIds.add(sepId.toLong())
+            }
+        } else {
+            words.forEach{ word ->
+                inputIds.add(tokenToId.getOrDefault(word, unkId).toLong())
+            }
+            inputIds.add(sepId.toLong())
         }
-        inputIds[inputIds.size - 1] = sepId.toLong()
-        return inputIds
+        return inputIds.toLongArray()
+    }
+
+    fun getTokenTypeIds(input : LongArray) : IntArray{
+        var sepCount = false
+        return input.map { input ->
+            val token = deTokenize(input.toInt())
+            if (token == "[SEP]"){
+                if (!sepCount){
+                    sepCount = true
+                    0
+                }else{
+                    1
+                }
+            }else{
+                if (!sepCount) 0 else 1
+            }
+        }.toIntArray()
     }
 
     override fun deTokenize(tokenId: Int) = idToToken.getOrDefault(tokenId, "[UNK]")

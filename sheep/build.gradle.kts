@@ -51,7 +51,7 @@ publishing {
                 from(components["release"])
                 groupId = "com.github.palnavneet"
                 artifactId = "sheep"
-                version = "1.0.0-alpha"
+                version = "1.0.0-Beta"
             }
         }
     }

@@ -31,7 +31,6 @@ class MainActivity : ComponentActivity() {
             "vocab.txt"
         )
         val memoryAfter = runtime.totalMemory() - runtime.freeMemory()
-        Log.d("memoryAfter", "$memoryAfter")
         if (sheep.isInitialized){
             val label = sheep.run("input" to listOf("Hey How was your day?", "I think we are enemies","I will kill you"))
             val predictedLabel = label[0]["predicted_label"]

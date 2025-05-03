@@ -52,7 +52,7 @@ afterEvaluate {
 
                 groupId = "com.github.palnavneet"
                 artifactId = "sheep"
-                version = "1.0.0"
+                version = "1.0.0-alpha"
             }
         }
     }

@@ -15,36 +15,38 @@ class MainActivity : ComponentActivity() {
         val runtime = Runtime.getRuntime()
         val memoryBefore = runtime.totalMemory() - runtime.freeMemory()
         Log.d("memoryBefore", "$memoryBefore")
-        val sheep = Sheep(
-            this,
-            TokenizerType.WordPiece,
-            "model_quant.onnx",
-            "vocab.txt"
-        )
-        sheep.run("input" to Pair("France, officially known as the French Republic, is a country whose capital is Paris. It is located in Western Europe and is known for its rich history, culture, and landmarks like the Eiffel Tower.", "What is the capital of France?"))
 //        val sheep = Sheep(
 //            this,
 //            TokenizerType.WordPiece,
-//            "distilbert_classification_quantized.onnx",
+//            "model_quant.onnx",
 //            "vocab.txt"
 //        )
-//        val memoryAfter = runtime.totalMemory() - runtime.freeMemory()
-//        Log.d("memoryAfter", "$memoryAfter")
-//        if (sheep.isInitialized){
-//            val label = sheep.run("input" to listOf("Hey How was your day?", "I think we are enemies","I will kill you"))
-//            val predictedLabel = label[0]["predicted_label"]
-//            val confidence = label[0]["confidence"]
-//            Log.d("Sheep", "$predictedLabel")
-//            Log.d("Sheep", "$confidence")
-//            val predictedLabel1 = label[1]["predicted_label"]
-//            val confidence1 = label[1]["confidence"]
-//            Log.d("Sheep", "$predictedLabel1")
-//            Log.d("Sheep", "$confidence1")
-//            val predictedLabel2 = label[2]["predicted_label"]
-//            val confidence2 = label[2]["confidence"]
-//            Log.d("Sheep", "$predictedLabel2")
-//            Log.d("Sheep", "$confidence2")
-//        }
+//        val label = sheep.run("input" to Pair("What is the color of the sky?","The color of the sky is blue"))
+//        val answer = label[0]["answer"]
+//        Log.d("sheep", "onCreate: $answer")
+           val sheep = Sheep(
+            this,
+            TokenizerType.WordPiece,
+            "distilbert_classification_quantized.onnx",
+            "vocab.txt"
+        )
+        val memoryAfter = runtime.totalMemory() - runtime.freeMemory()
+        Log.d("memoryAfter", "$memoryAfter")
+        if (sheep.isInitialized){
+            val label = sheep.run("input" to listOf("Hey How was your day?", "I think we are enemies","I will kill you"))
+            val predictedLabel = label[0]["predicted_label"]
+            val confidence = label[0]["confidence"]
+            Log.d("Sheep", "$predictedLabel")
+            Log.d("Sheep", "$confidence")
+            val predictedLabel1 = label[1]["predicted_label"]
+            val confidence1 = label[1]["confidence"]
+            Log.d("Sheep", "$predictedLabel1")
+            Log.d("Sheep", "$confidence1")
+            val predictedLabel2 = label[2]["predicted_label"]
+            val confidence2 = label[2]["confidence"]
+            Log.d("Sheep", "$predictedLabel2")
+            Log.d("Sheep", "$confidence2")
+        }
 //        checkTokenizer(this)
     }
 }

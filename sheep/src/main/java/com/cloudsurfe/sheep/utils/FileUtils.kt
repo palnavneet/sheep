@@ -7,7 +7,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-fun copyAssetInInternalStorage(
+internal fun copyAssetInInternalStorage(
     context: Context,
     assetFileName: String,
 ): String? {

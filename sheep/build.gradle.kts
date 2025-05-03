@@ -48,7 +48,7 @@ publishing{
     publications {
         register<MavenPublication>("release"){
             groupId = "https://github.com/palnavneet"
-            artifactId = "Sheep"
+            artifactId = "sheep"
             version = "1.0.0-alpha"
 
             afterEvaluate {

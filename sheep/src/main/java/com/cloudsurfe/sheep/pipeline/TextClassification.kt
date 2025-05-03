@@ -10,7 +10,7 @@ import com.cloudsurfe.sheep.utils.generateAttentionMask
 import java.nio.LongBuffer
 import kotlin.collections.toFloatArray
 
-class TextClassification(
+internal class TextClassification(
 ) : Pipeline {
 
     override fun pipeline(modelOutputBundle: ModelOutputBundle): List<Map<String, String>> {

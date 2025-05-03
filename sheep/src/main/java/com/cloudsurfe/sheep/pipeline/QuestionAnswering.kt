@@ -13,24 +13,36 @@ import com.cloudsurfe.sheep.utils.argmax
 import com.cloudsurfe.sheep.utils.computeOffsetMapping
 import java.nio.LongBuffer
 
-class QuestionAnswering() : Pipeline{
+internal class QuestionAnswering() : Pipeline{
 
     override fun pipeline(modelOutputBundle: ModelOutputBundle): List<Map<String, String>> {
         val output = mutableListOf<Map<String, String>>()
         modelOutputBundle.tensors.forEachIndexed { index,tensorMap ->
             val startLogits = (tensorMap["start_logits"]?.value as Array<FloatArray>)[0]
             val endLogits = (tensorMap["end_logits"]?.value as Array<FloatArray>)[0]
-            val start_probs = softmax(startLogits)
-            val end_probs = softmax(endLogits)
-
-            val startIndex = argmax(start_probs)
-            val endIndex = argmax(end_probs)
+            val startIndex = argmax(startLogits.map { it.toDouble() }.toDoubleArray())
+            val endIndex = argmax(endLogits.map { it.toDouble() }.toDoubleArray())
             val input = modelOutputBundle.tokenizationResultSet.input[index]
             val tokenizedTextInput = modelOutputBundle.tokenizationResultSet.detokenizedInput[index].split(",")
+            // Kinda misbehaving
             val offsets = computeOffsetMapping(tokens = tokenizedTextInput, originalText = input)
-            Log.d("sheep", "pipeline: $input")
-            Log.d("sheep", "pipeline: $offsets")
+            if (startIndex < offsets.size && endIndex < offsets.size && startIndex <= endIndex) {
+                val (startChar, _) = offsets[startIndex]
+                val (_, endChar) = offsets[endIndex]
+                val answer = input.substring(startChar, endChar)
 
+                output.add(
+                    mapOf(
+                        "answer" to answer
+                    )
+                )
+            }else{
+                output.add(
+                    mapOf(
+                        "answer" to "[N0_ANSWER]"
+                    )
+                )
+            }
 
         }
         return output

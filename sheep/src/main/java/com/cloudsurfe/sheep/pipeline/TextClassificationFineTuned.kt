@@ -3,6 +3,7 @@ package com.cloudsurfe.sheep.pipeline
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
+import android.util.Log
 import com.cloudsurfe.sheep.model.ModelOutputBundle
 import com.cloudsurfe.sheep.model.TokenizationResultSet
 import com.cloudsurfe.sheep.tokenizer.Tokenizer
@@ -11,7 +12,7 @@ import com.cloudsurfe.sheep.utils.softmax
 import java.nio.LongBuffer
 
 
-class TextClassificationFineTuned() : Pipeline {
+internal class TextClassificationFineTuned() : Pipeline {
 
     override fun pipeline(modelOutputBundle: ModelOutputBundle): List<Map<String, String>> {
         val output = mutableListOf<Map<String, String>>()

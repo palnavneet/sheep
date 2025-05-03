@@ -4,13 +4,13 @@ import ai.onnxruntime.OrtSession
 import ai.onnxruntime.TensorInfo
 import com.cloudsurfe.sheep.pipeline.PipelineType
 
-data class ModelMeta(
+internal data class ModelMeta(
     val type: PipelineType,
     val inputNames: List<String>,
     val outputNames: String
 )
 
-fun detectModelPipeline(session: OrtSession): ModelMeta {
+internal fun detectModelPipeline(session: OrtSession): ModelMeta {
     val inputs = session.inputInfo.keys.toList()
     val outputs = session.outputInfo
 

@@ -44,14 +44,15 @@ dependencies {
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.1")
 }
 
-publishing {
-    publications {
-        register<MavenPublication>("release") {
-            afterEvaluate {
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
                 from(components["release"])
+
                 groupId = "com.github.palnavneet"
                 artifactId = "sheep"
-                version = "1.0.0-Beta"
+                version = "1.0.0"
             }
         }
     }

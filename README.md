@@ -5,6 +5,8 @@
 
 Sheep is a Kotlin-based Android library for clean and efficient natural language processing (NLP) using ONNX format models. Powered by [ONNX Runtime](https://onnxruntime.ai/), it supports a variety of pipelines including classification, question answering, and translation—all running fully offline. Sheep handles tokenization automatically, so you can focus on high-level tasks without worrying about low-level text preprocessing. The library is lightweight, fast, and designed with privacy and mobile performance in mind.
 
+> Models must be in **ONNX format**. Quantized models are recommended for best performance on mobile devices.
+
 ## Supported Models
 
 - [x] BERT

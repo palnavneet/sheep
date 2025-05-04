@@ -129,6 +129,41 @@ val answer = label[0]["answer"]
 Log.d("sheep", "$answer")
 ```
 
+## Recommendations
+
+To ensure smooth and safe execution of all Sheep pipelines (e.g., Text Classification, Question Answering, Translation, etc.), follow these best practices.
+
+### Use Coroutine Scopes
+
+Model initialization may involve I/O operations like loading ONNX files from assets or external storage. Always initialize the model within a coroutine to avoid blocking the main thread:
+
+```kotlin
+lifecycleScope.launch {
+    val sheep = Sheep(
+    this,
+    TokenizerType.WordPiece,
+    modelName,
+    vocabFile
+)
+    // Now it's safe to use sheep
+}
+```
+
+You can use lifecycleScope, viewModelScope, or any other appropriate coroutine scope based on your architecture.
+
+### Check Initialization Before Running
+
+Before calling `run(...)` function, check that the model is fully initialized:
+
+```kotlin
+if (sheep.isInitialized) {
+    val result = sheep.run("input" to "Sample input")
+    // Handle result
+} else {
+    Log.d("Sheep", "Model is not initialized.")
+}
+```
+
 
 ## License
 

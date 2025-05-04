@@ -51,6 +51,12 @@ dependencyResolutionManagement {
     }
 }
 ```
+- **Dependecy**: Add the following to your app-level `build.gradle.kts` file:
+```gradle
+dependencies {
+    implementation("com.github.palnavneet:sheep:<version>") // Recommended: Replace <version> with the latest version
+}
+```
 
 ## License
 

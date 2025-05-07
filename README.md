@@ -20,7 +20,7 @@ Sheep is a Kotlin-based Android library for clean and efficient natural language
 ## Supported Pipelines
 
 - [x] Text Classification
-- [x] Question Answering
+- [ ] Question Answering
 - [ ] Token Classification (NER, POS)
 - [ ] Sentiment Analysis
 - [ ] Zero-shot Classification
